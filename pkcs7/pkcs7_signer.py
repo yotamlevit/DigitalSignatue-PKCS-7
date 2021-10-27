@@ -4,40 +4,47 @@ Aurthur: Yotam Levit
 Project - DigitalSignature
 """
 
-PATH_TO_PRIVATE_KEY = "../data/private-key.pem"
-PATH_TO_CERTIFICATE = "../data/certificate.pem"
+from cryptography import x509
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.bindings.openssl.binding import Binding
 
-from OpenSSL import crypto
-import time
-import base64
+PATH_TO_PRIVATE_KEY = "./PKCS7-test-privkey.pem"
+PATH_TO_CERTIFICATE = "./PKCS7-test-sscert.pem"
+_lib = Binding.lib
+_ffi = Binding.ffi
 
 
-def get_private_key(path_to_pkey):
-    with open(path_to_pkey) as pkey_handler:
-        pkey_buf = pkey_handler.read()
-    return  crypto.load_privatekey(crypto.FILETYPE_PEM , pkey_buf)
+def get_private_key(path_to_private_key):
+    with open(path_to_private_key, 'rb') as private_key_handler:
+        private_key_buffer = private_key_handler.read()
+    return serialization.load_pem_private_key(private_key_buffer, None)
 
 
 def get_certificate(path_to_certificate):
-    with open(path_to_certificate) as cert_handler:
-        cert_buf = cert_handler.read()
-    time.sleep(1)
-    print(cert_buf)
-    time.sleep(1)
-    tmp = crypto.load_certificate(crypto.FILETYPE_PEM, cert_buf)
-    return tmp
+    with open(path_to_certificate, 'rb') as certificate_handler:
+        certificate_buffer = certificate_handler.read()
+    return x509.load_pem_x509_certificate(certificate_buffer)
 
 
-def pkcs7_sign(data, path_to_pkey, path_to_certificate):
-    pkey = get_private_key(path_to_pkey)
-    print(pkey)
-    #cert = get_certificate(path_to_certificate)
-    #print(cert)
-    siged_data = crypto.sign(pkey, data, "sha256")
-    print("A " + str(siged_data))
-    data_base64 = base64.b64encode(siged_data)
-    print("B " + str(data_base64))
+def pkcs7_sign(data, private_key, cert):
+    bio_in = _lib.BIO_new_mem_buf(data.encode("utf-8"), len(data))
+    pkcs7_object = _lib.PKCS7_sign(cert._x509, private_key._evp_pkey, _ffi.NULL, bio_in, 0)
 
+    bio_out = _lib.BIO_new(_lib.BIO_s_mem())
+    _lib.PEM_write_bio_PKCS7(bio_out, pkcs7_object)
+
+    result_buffer = _ffi.new("char**")
+    buffer_length = _lib.BIO_get_mem_data(bio_out, result_buffer)
+    signed_data = _ffi.buffer(result_buffer[0], buffer_length)[:]
+    return signed_data.decode('utf-8')
+
+
+def main():
+    data = "test"
+    certificate = get_certificate(PATH_TO_CERTIFICATE)
+    private_key = get_private_key(PATH_TO_PRIVATE_KEY)
+    signed_data = pkcs7_sign(data, private_key, certificate)
+    print(signed_data)
 
 if __name__ == '__main__':
-    pkcs7_sign("test", PATH_TO_PRIVATE_KEY, PATH_TO_CERTIFICATE)
+    main()
