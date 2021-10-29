@@ -7,11 +7,13 @@ Project - DigitalSignature
 from utils.utils import (
     get_file_data_as_binary,
     get_stdin,
-    write_stdout
+    write_stdout,
+    convert_binary_to_text
 )
 
 __all__ = [
     "get_file_data_as_binary",
     "get_stdin",
     "write_stdout",
+    "convert_binary_to_text"
 ]
