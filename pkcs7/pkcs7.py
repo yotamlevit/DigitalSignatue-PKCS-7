@@ -4,11 +4,10 @@ Aurthur: Yotam Levit
 Project - DigitalSignature
 """
 
-import utils
 from cryptography.hazmat.bindings.openssl.binding import Binding
 
 
-class PKCS7(Binding):
+class PKCS7():
     """
     This Class is a child class to Binding from cryptography.
     Its purpose is to implement PKCS7 Digital Signature and in particular
@@ -19,8 +18,8 @@ class PKCS7(Binding):
         self.private_key = private_key
         self.cert = cert
         self.data = data
-        self._lib = super.lib
-        self._ffi = super.ffi
+        self._lib = Binding.lib
+        self._ffi = Binding.ffi
 
     def __check_signature_parameters_existence(self):
         """
@@ -42,7 +41,7 @@ class PKCS7(Binding):
         ;return: True if all the condition for pkcs7 digital sign are right
                  False if one of the condition for pkcs7 digital sign if not right (left... jk...)
         """
-        if self.__check_signature_parameters_exist():
+        if self.__check_signature_parameters_existence():
             return True
         return False
 
@@ -51,7 +50,7 @@ class PKCS7(Binding):
         This function makes the pkcs7 signature it self
         """
         if self.__validate_signature_parameters():
-            bio_in = self._lib.BIO_new_mem_buf(self.data.encode("utf-8"), len(self.data))
+            bio_in = self._lib.BIO_new_mem_buf(self.data, len(self.data))
             pkcs7_object = self._lib.PKCS7_sign(self.cert._x509, self.private_key._evp_pkey, self._ffi.NULL, bio_in, 0)
 
             bio_out = self._lib.BIO_new(self._lib.BIO_s_mem())
