@@ -4,6 +4,7 @@ Aurthur: Yotam Levit
 Project - DigitalSignature
 """
 
+import utils
 from cryptography.hazmat.bindings.openssl.binding import Binding
 
 
@@ -64,7 +65,7 @@ class PKCS7(Binding):
 
 
 def main():
-    pass
+    data = utils.get_file_data_as_binary()
 
 if __name__ == '__main__':
     main()
