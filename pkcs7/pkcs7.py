@@ -64,7 +64,11 @@ class PKCS7():
 
 
 def main():
-    data = utils.get_file_data_as_binary()
+    pass
 
 if __name__ == '__main__':
+    pkcs7_object = PKCS7()
+    assert pkcs7_object.sign() is False
+    pkcs7_object.data = b'test'
+    assert pkcs7_object.sign() is False
     main()
