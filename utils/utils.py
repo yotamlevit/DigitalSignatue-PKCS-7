@@ -4,6 +4,7 @@ Aurthur: Yotam Levit
 Project - DigitalSignature
 """
 
+import sys
 
 READ_AS_BINARY = 'rb'
 BINARY_TEXT_FORMAT = 'utf-8'
@@ -30,7 +31,7 @@ def convert_binary_to_text(binary_data):
 
 
 def get_stdin():
-    pass
+    return sys.stdin.read()
 
 
 def write_stdout():
