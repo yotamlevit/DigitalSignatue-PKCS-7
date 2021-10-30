@@ -4,9 +4,10 @@ Aurthur: Yotam Levit
 Project - DigitalSignature
 """
 
+
 from pkcs7 import PKCS7
 
 
-__all__= (
+__all__= [
     "PKCS7"
-)
+]
