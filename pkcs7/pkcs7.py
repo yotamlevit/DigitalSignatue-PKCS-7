@@ -62,6 +62,9 @@ class PKCS7():
             return signed_data.decode('utf-8')
         return False
 
+    def verify(self):
+        pass
+
 
 def main():
     pass
