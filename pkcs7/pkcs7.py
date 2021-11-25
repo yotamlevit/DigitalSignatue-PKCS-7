@@ -14,10 +14,17 @@ class PKCS7():
     IBM`s DataPower Digital Signature format.
     """
 
-    def __init__(self, private_key=None, cert=None, data=None):
-        self.private_key = private_key
-        self.cert = cert
-        self.data = data
+    def __init__(self, private_key: object, cert: object, data: bytes):
+        """
+        Initialization function for PKCS7 class
+
+        :param private_key: _RSAPrivateKey - The private key to sign with
+        :param cert: Certificate - The Certificate to sign and verify with
+        :param data: Bytes - The binary data to sign
+        """
+        self.private_key = private_key if private_key is not None else None
+        self.cert = cert if cert is not None else None
+        self.data = data if data is not None else None
         self._lib = Binding.lib
         self._ffi = Binding.ffi
 
@@ -60,7 +67,7 @@ class PKCS7():
             result_buffer = self._ffi.new("char**")
             buffer_length = self._lib.BIO_get_mem_data(bio_out, result_buffer)
             signed_data = self._ffi.buffer(result_buffer[0], buffer_length)[:]
-            
+
             return signed_data.decode('utf-8')
 
         return False
