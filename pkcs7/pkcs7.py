@@ -43,6 +43,7 @@ class PKCS7():
         """
         if self.__check_signature_parameters_existence():
             return True
+
         return False
 
     def sign(self):
@@ -59,7 +60,9 @@ class PKCS7():
             result_buffer = self._ffi.new("char**")
             buffer_length = self._lib.BIO_get_mem_data(bio_out, result_buffer)
             signed_data = self._ffi.buffer(result_buffer[0], buffer_length)[:]
+            
             return signed_data.decode('utf-8')
+
         return False
 
     def verify(self):
