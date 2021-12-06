@@ -14,9 +14,9 @@ def main():
     x = 0
     while(x < 1):
         x+=1
-        singed_data = pkcs7_signer.sign()
+        singed_data = pkcs7_signer.no_detach_sign()
         print(x)
-    singed_data = pkcs7_signer.sign()
+    singed_data = pkcs7_signer.no_detach_sign()
     #print(singed_data)
 
 

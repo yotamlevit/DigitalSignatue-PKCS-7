@@ -53,7 +53,7 @@ class PKCS7():
 
         return False
 
-    def sign(self):
+    def no_detach_sign(self):
         """
         This function makes the pkcs7 signature it self
         """
