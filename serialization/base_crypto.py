@@ -32,7 +32,7 @@ def get_certificate(path_to_certificate):
 
     @param path_to_certificate: String - The path to the PEM format file
                                          that contains the certificate
-                                         
+
     @return: Cerfiticate - object that contains the certificate
     """
     certificate_buffer = get_file_data_as_binary(path_to_certificate)

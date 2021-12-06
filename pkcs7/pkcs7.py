@@ -22,7 +22,7 @@ class PKCS7():
         :param cert: Certificate - The Certificate to sign and verify with
         :param data: Bytes - The binary data to sign
         """
-        self.private_key = private_key if private_key is not None else None
+        self.private_key = private_key if private_key is None else None
         self.cert = cert if cert is not None else None
         self.data = data if data is not None else None
         self._lib = Binding.lib
