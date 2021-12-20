@@ -9,7 +9,6 @@ from utils.utils import (
     get_stdin,
     write_stdout,
     convert_binary_to_text,
-    Enum
 )
 
 __all__ = [

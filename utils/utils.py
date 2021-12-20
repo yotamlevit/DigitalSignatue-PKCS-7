@@ -5,7 +5,6 @@ Project - DigitalSignature
 """
 
 import sys
-import enum
 
 READ_AS_BINARY = 'rb'
 BINARY_TEXT_FORMAT = 'utf-8'
@@ -37,13 +36,3 @@ def get_stdin():
 
 def write_stdout():
     pass
-
-
-# Python 3.10 changed representation of enums. We use well-defined object
-# representation and string representation from Python 3.9.
-class Enum(enum.Enum):
-    def __repr__(self):
-        return f"<{self.__class__.__name__}.{self._name_}: {self._value_!r}>"
-
-    def __str__(self):
-        return f"{self.__class__.__name__}.{self._name_}"
