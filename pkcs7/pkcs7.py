@@ -4,6 +4,7 @@ Aurthur: Yotam Levit
 Project - DigitalSignature
 """
 
+import base64
 from cryptography import x509
 from cryptography.utils import _check_bytes
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
@@ -19,61 +20,60 @@ PKCS7_HASH_OPTIONS = {
     "SHA512": hashes.SHA512}
 
 
+def validate_private_key(private_key) -> bool:
+    """
+    This function validates if a private key is RSA / EC key (_RSAPrivateKey)
+
+    :param private_key: A Private Key object
+    :return: True if the private key is valid. Exception if not
+    """
+    if not isinstance(private_key, (rsa.RSAPrivateKey, ec.EllipticCurvePrivateKey)):
+        raise TypeError("Only RSA & EC keys are supported at this time.")
+    return True
+
+
+def validate_certificate(certificate) -> bool:
+    """
+    This function validates if a certificates is x509
+
+    :param certificate: A certificate object
+    :return: True if the private key is valid. Exception if not
+    """
+    if not isinstance(certificate, x509.Certificate):
+        raise TypeError("certificate must be a x509.Certificate")
+    return True
+
+
+def validate_hash(hash_type) -> bool:
+    """
+    This function checks if the given hash type is good for pkcs7 signature (The PKCS_HASH_OPTION constant)
+
+    :param hash_type: The hash type to validate
+    :return: True if the private key is valid. Exception if not
+    """
+    if hash_type not in PKCS7_HASH_OPTIONS:
+        raise ValueError("Hash type must be from the PKCS7_HASH_OPTIONS: {}"
+                         .format(''.join([key + " | " for key in list(PKCS7_HASH_OPTIONS.keys())])))
+    return True
+
+
+def validate_data(data) -> bool:
+    """
+    This function checks if the givin data is a Bytes object or not
+
+    :param data: The data to validate
+    :return: True if the private key is valid. Exception if not
+    """
+    _check_bytes("data", data)
+    return True
+
+
 class PKCS7(PKCS7SignatureBuilder):
     """
     This Class is a child class to PKCS7SignatureBuilder from cryptography.
     Its purpose is to implement PKCS7 Digital Signature in an easy, safe and efficient way.
     Also this implementation can sign and verify like IBM`s DataPower Digital Signature actions.
     """
-
-    @staticmethod
-    def __validate_private_key(private_key) -> bool:
-        """
-        This function validates if a private key is RSA / EC key (_RSAPrivateKey)
-
-        :param private_key: A Private Key object
-        :return: True if the private key is valid. Exception if not
-        """
-        if not isinstance(private_key, (rsa.RSAPrivateKey, ec.EllipticCurvePrivateKey)):
-            raise TypeError("Only RSA & EC keys are supported at this time.")
-        return True
-
-    @staticmethod
-    def __validate_certificate(certificate) -> bool:
-        """
-        This function validates if a certificates is x509
-
-        :param certificate: A certificate object
-        :return: True if the private key is valid. Exception if not
-        """
-        if not isinstance(certificate, x509.Certificate):
-            raise TypeError("certificate must be a x509.Certificate")
-        return True
-
-    @staticmethod
-    def __validate_hash(hash_type) -> bool:
-        """
-        This function checks if the given hash type is good for pkcs7 signature (The PKCS_HASH_OPTION constant)
-
-        :param hash_type: The hash type to validate
-        :return: True if the private key is valid. Exception if not
-        """
-        if hash_type not in PKCS7_HASH_OPTIONS:
-            raise ValueError("Hash type must be from the PKCS7_HASH_OPTIONS: {}"
-                             .format(''.join([key + " | " for key in list(PKCS7_HASH_OPTIONS.keys())])))
-        return True
-
-    @staticmethod
-    def __validate_data(data) -> bool:
-        """
-        This function checks if the givin data is a Bytes object or not
-
-        :param data: The data to validate
-        :return: True if the private key is valid. Exception if not
-        """
-        _check_bytes("data", data)
-        return True
-
     def __init__(self, private_key: object, cert: object, data: bytes, pkcs7_hash: str):
         """
         Initialization function for PKCS7 class
@@ -82,15 +82,15 @@ class PKCS7(PKCS7SignatureBuilder):
         :param cert: Certificate x509.Certificate - The Certificate to sign and verify with
         :param data: Bytes - The binary data to sign
         """
-        if self.__validate_private_key(private_key):
+        if validate_private_key(private_key):
             self.__private_key = private_key
 
-        if self.__validate_certificate(cert):
+        if validate_certificate(cert):
             self.__cert = cert
 
-        self.__validate_data(data)
+        validate_data(data)
 
-        if self.__validate_hash(pkcs7_hash):
+        if validate_hash(pkcs7_hash):
             self.__hash = PKCS7_HASH_OPTIONS[pkcs7_hash]
 
         super(PKCS7, self).__init__(data, signers=[(self.__cert, self.__private_key, self.__hash)])
@@ -105,10 +105,10 @@ class PKCS7(PKCS7SignatureBuilder):
         """
         This function updates the certificate/ verify to sign with
         :param cert:
-        :return: 
+        :return:
         """
         try:
-            self.__validate_certificate(cert)
+            validate_certificate(cert)
             self.__cert = cert
             self.__update_signer()
         except TypeError as err:
@@ -117,7 +117,7 @@ class PKCS7(PKCS7SignatureBuilder):
 
     def update_private_key(self, private_key: object):
         try:
-            self.__validate_private_key(private_key)
+            validate_private_key(private_key)
             self.__private_key = private_key
             self.__update_signer()
         except TypeError as err:
@@ -151,19 +151,43 @@ class PKCS7(PKCS7SignatureBuilder):
 
     def no_detach_sign(self):
         """
-        This function signs adn returns the class data in pkcs7 smime no detach format.
+        This function signs and returns the class data in pkcs7 smime no detach format.
 
-        :return: <Str> - The signed data is
+        :return: <Bytes> - The signed data
         """
         if self.__validate_signature_parameters():
             try:
                 signed_data = self.sign(serialization.Encoding.PEM, options=[])
-                return signed_data.decode('utf-8')
+                return signed_data
             except ValueError as err:
                 return False, err
             except Exception as err:
                 return False, err
         return False, "One or more of the needed parameters is missing. (Needed parameters: cer)"
+
+    def string_no_detach_sign(self):
+        """
+        This function signs data using the no_detach_sign function for regural text files
+        For example Text, json, xml, etc...
+
+        :return: <String> - The signed data in string format
+        """
+        return self.no_detach_sign().decode('utf-8')
+
+    def binary_no_detach_sign(self):
+        """
+        This function signs data using the no_detach_sign function for binary files.
+        For example ZIP, PNG, etc...
+
+        Process: The function encodes the data in base64 then sign the base64 data and return it.
+
+        :return: <String> - The signed data in string format
+
+        """
+        self._data = base64.b64encode(self._data)
+        signed_data = self.string_no_detach_sign()
+        self._data = base64.b64decode(self._data)
+        return signed_data
 
     def verify(self):
         pass
